@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0d1814">
+<title>ISO óra — Idő és naptár</title>
+<style>
+:root{--bg:#0d1814;--panel:#15241e;--panel2:#172820;--line:#263a31;--text:#e3ece8;--muted:#91a49b;--accent:#4bd0b0;--accentText:#08251e;--shadow:0 18px 50px #0002}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;transition:background .2s,color .2s}
+body.light{--bg:#edf4f0;--panel:#fff;--panel2:#f5faf7;--line:#d4e3db;--text:#1b3027;--muted:#60766b;--accent:#39b99b;--accentText:#06261d;--shadow:0 18px 50px #163a2810}
+button,input{font:inherit}button{cursor:pointer;color:inherit;background:var(--panel2);border:1px solid var(--line);border-radius:15px;padding:13px 17px;transition:transform .12s,background .12s}button:hover{border-color:var(--accent)}button:active{transform:scale(.98)}button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.topbar{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:10px;padding:12px max(16px,calc((100vw - 900px)/2));background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(18px);border-bottom:1px solid color-mix(in srgb,var(--line) 65%,transparent)}
+.brand{font-weight:650;font-size:18px;margin-right:auto;display:flex;gap:10px;align-items:center}.brand-mark{display:grid;place-items:center;width:35px;height:35px;border-radius:12px;background:var(--accent);color:var(--accentText);font-weight:800}
+.topbar button{padding:9px 13px;border-radius:12px}.wrap{max-width:830px;margin:28px auto;padding:0 18px 60px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:28px;padding:28px;box-shadow:var(--shadow)}
+.clock-card{text-align:center}.date-line{font-size:clamp(18px,3vw,28px);color:var(--muted);margin:4px 0 18px}.clock{font-size:clamp(58px,13vw,122px);font-weight:650;letter-spacing:.035em;line-height:1.12;font-variant-numeric:tabular-nums;white-space:nowrap}.timezone{font-size:clamp(15px,2.6vw,23px);color:var(--muted);margin:22px 0 34px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:24px;text-align:left}.stat{border-top:1px solid var(--line);padding-top:18px}.stat-label{color:var(--muted);font-size:17px}.stat-value{font-size:clamp(19px,3.5vw,27px);font-weight:650;margin-top:5px}
+.tabs{display:flex;gap:12px;flex-wrap:wrap;margin:28px 0}.tabs button.active{background:var(--accent);color:var(--accentText);border-color:var(--accent)}
+.calendar{padding:26px 26px 22px}.cal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:24px}.month-title{font-size:clamp(20px,3.8vw,28px);font-weight:650;text-align:center}.cal-head button{min-width:58px;font-size:20px}.weekdays,.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.weekdays div{text-align:center;color:var(--muted);padding:8px 0;font-size:15px}.days{row-gap:7px}.week{display:contents}.day{aspect-ratio:1/1;display:grid;place-items:center;border-radius:15px;border:1px solid transparent;min-width:0;padding:0;background:transparent;font-size:clamp(15px,3.3vw,23px);font-variant-numeric:tabular-nums}.day.empty{pointer-events:none}.day:not(.empty):hover{border-color:var(--accent)}.day.today{background:var(--accent);color:var(--accentText);font-weight:750}.day.selected:not(.today){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,var(--panel))}
+.weekno{display:grid;place-items:center;color:var(--muted);font-size:13px;grid-column:1;min-height:0}
+.day-detail{border-top:1px solid var(--line);margin-top:24px;padding-top:22px}.detail-title{font-size:23px;font-weight:700}.muted{color:var(--muted)}.detail-name{margin-top:3px}.empty-note{margin:30px 0 8px;color:var(--muted)}
+.lower{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}.lower .card{padding:22px}.section-title{font-size:20px;font-weight:650;margin:0 0 14px}.reminder-form{display:flex;gap:8px;margin-top:12px}.reminder-form input{min-width:0;flex:1;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:11px}.reminder-list{padding:0;margin:12px 0 0;list-style:none}.reminder-list li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);overflow-wrap:anywhere}.remove{padding:5px 9px;border-radius:9px}.small{font-size:13px}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--accentText);padding:12px 18px;border-radius:14px;box-shadow:var(--shadow);display:none;z-index:5}
+@media(max-width:560px){.topbar{padding:10px 12px;gap:7px}.brand{font-size:16px}.topbar .optional{display:none}.wrap{margin:18px auto;padding:0 12px 36px}.card{padding:21px 17px;border-radius:23px}.clock-card{padding:25px 16px}.clock{letter-spacing:0}.timezone{margin:15px 0 25px}.stats{gap:13px}.stat-label{font-size:15px}.calendar{padding:20px 12px}.cal-head button{min-width:45px;padding:10px}.weekdays,.days{gap:3px}.day{border-radius:12px}.lower{grid-template-columns:1fr}.tabs{gap:8px;margin:18px 0}.tabs button{flex:1;padding:12px 8px}}
+
+.budget-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:22px 0}
+.budget-total{border:1px solid var(--line);background:var(--panel2);border-radius:16px;padding:15px;min-width:0}
+.budget-total strong{display:block;font-size:clamp(18px,3.5vw,27px);margin-top:6px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.budget-total.balance strong{color:var(--accent)}
+.budget-form{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;align-items:end;gap:10px;margin:20px 0}
+.budget-field{display:flex;flex-direction:column;gap:7px;font-size:14px;color:var(--muted);min-width:0}
+.budget-field input,.budget-field select{width:100%;min-width:0;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:12px;padding:12px}
+.budget-add{background:var(--accent);color:var(--accentText);border-color:var(--accent);white-space:nowrap}
+.budget-table-wrap{overflow-x:auto}
+.budget-table{width:100%;border-collapse:collapse;text-align:left}
+.budget-table th{color:var(--muted);font-size:13px;font-weight:600}
+.budget-table th,.budget-table td{padding:12px 8px;border-bottom:1px solid var(--line)}
+.budget-table td:first-child{overflow-wrap:anywhere;min-width:100px}
+.budget-table td:nth-child(3){white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:650}
+.budget-type-income{color:var(--accent)}.budget-type-expense{color:#f29a91}
+.budget-table input{width:100%;min-width:80px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:7px}
+.budget-table select{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:7px;max-width:125px}
+.budget-actions{display:flex;gap:5px;justify-content:flex-end}
+.budget-actions button{padding:6px 9px;border-radius:8px;font-size:13px}
+@media(max-width:650px){.budget-summary{grid-template-columns:1fr}.budget-total{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px}.budget-total strong{margin:0}.budget-form{grid-template-columns:1fr 1fr}.budget-field:first-child{grid-column:1/-1}.budget-add{grid-column:1/-1}.budget-table th,.budget-table td{padding:10px 5px;font-size:13px}}
+
+
+.budget-analytics{margin:22px 0 26px;padding:18px;border:1px solid var(--line);border-radius:18px;background:var(--panel2)}
+.analytics-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.month-filter-label{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px}
+.month-filter-label input{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px;max-width:175px}
+.month-summary{margin:15px 0 18px}
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.chart-panel{border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
+.chart-panel .section-title{font-size:17px}
+.bar-chart{display:flex;flex-direction:column;gap:13px}
+.bar-row{display:grid;grid-template-columns:minmax(70px,auto) 1fr auto;align-items:center;gap:8px;font-size:13px}
+.bar-track{height:12px;background:var(--line);border-radius:20px;overflow:hidden;min-width:20px}
+.bar-fill{height:100%;border-radius:20px;background:var(--accent);min-width:0;transition:width .2s}
+.bar-fill.expense{background:#e99a8f}
+.bar-value{font-variant-numeric:tabular-nums;white-space:nowrap}
+.chart-empty{font-size:13px;color:var(--muted);padding:7px 0}
+.budget-field input[type=date]{min-height:45px}
+@media(max-width:650px){.chart-grid{grid-template-columns:1fr}.budget-form{grid-template-columns:1fr 1fr}.budget-field:first-child{grid-column:auto}.budget-add{grid-column:1/-1}.budget-table th,.budget-table td{padding:8px 4px;font-size:12px}.month-summary{grid-template-columns:1fr}.budget-analytics{padding:12px}.analytics-head{align-items:flex-start}}
+
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="brand-mark">S</span><span>ISO óra</span></div>
+  <button id="localBtn" class="optional">Helyi idő</button>
+  <button id="utcBtn" class="optional">UTC</button>
+  <button id="themeBtn" aria-label="Téma váltása">◐</button>
+  <button id="exportBtn">↓ Export</button>
+</header>
+<main class="wrap">
+  <section class="card clock-card" aria-label="Pontos idő">
+    <div id="todayLine" class="date-line">—</div>
+    <div id="clock" class="clock">00:00:00</div>
+    <div id="zoneLine" class="timezone">Helyi idő</div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Aktuális hét</div><div id="weekStat" class="stat-value">—</div></div>
+      <div class="stat"><div class="stat-label">Mai névnap</div><div id="nameStat" class="stat-value">—</div></div>
+    </div>
+  </section>
+  <nav class="tabs" aria-label="Óra beállításai">
+    <button id="tabLocal" class="active">Helyi idő</button><button id="tabUtc">UTC</button><button id="tabTheme">Téma</button>
+  </nav>
+  <section class="card calendar" aria-label="Naptár">
+    <div class="cal-head">
+      <button id="prevMonth" aria-label="Előző hónap">‹</button>
+      <div id="monthTitle" class="month-title">2026. október</div>
+      <button id="todayBtn">Ma</button>
+      <button id="nextMonth" aria-label="Következő hónap">›</button>
+    </div>
+    <div class="weekdays"><div>H</div><div>K</div><div>Sze</div><div>Cs</div><div>P</div><div>Szo</div><div>V</div></div>
+    <div id="days" class="days"></div>
+    <div class="day-detail">
+      <div id="detailTitle" class="detail-title">—</div>
+      <div id="detailName" class="detail-name muted">Névnap: —</div>
+      <p id="detailNote" class="empty-note">Nincs emlékeztető erre a napra.</p>
+    </div>
+  </section>
+  <section class="lower">
+    <div class="card">
+      <h2 class="section-title">Emlékeztetők</h2>
+      <div class="muted small">Adj emlékeztetőt a kijelölt naphoz.</div>
+      <form id="reminderForm" class="reminder-form"><input id="reminderInput" maxlength="140" placeholder="Pl. találkozó 15:00-kor" aria-label="Emlékeztető szövege" required><button type="submit">+</button></form>
+      <ul id="reminderList" class="reminder-list"></ul>
+    </div>
+    <div class="card">
+      <h2 class="section-title">Gyors infók</h2>
+      <p class="muted">Az ISO-hétfővel kezdődő hét száma.</p>
+      <p>📅 <strong id="selectedWeek">—</strong></p>
+      <p>🌍 <strong id="zoneInfo">—</strong></p>
+      <p class="muted small">Az emlékeztetők ebben a böngészőben, ezen az eszközön tárolódnak.</p>
+    </div>
+  </section>
+
+  <section class="card budget-card" aria-label="Bevétel és kiadás tervező" style="margin-top:18px">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div>
+        <h2 class="section-title" style="font-size:25px;margin-bottom:5px">Bevétel–kiadás tervező</h2>
+        <div class="muted small">Szerkeszthető tételek, automatikus összesítés</div>
+      </div>
+      <button id="budgetExport" type="button">↓ CSV export</button>
+    </div>
+    <div class="budget-summary">
+      <div class="budget-total"><div class="muted">Összes bevétel</div><strong id="incomeTotal">0 Ft</strong></div>
+      <div class="budget-total"><div class="muted">Összes kiadás</div><strong id="expenseTotal">0 Ft</strong></div>
+      <div class="budget-total balance"><div class="muted">Egyenleg</div><strong id="balanceTotal">0 Ft</strong></div>
+    </div>
+    <div class="budget-analytics">
+      <div class="analytics-head">
+        <h3 class="section-title" style="margin:0">Havi áttekintés</h3>
+        <label class="month-filter-label">Hónap <input id="budgetMonth" type="month" aria-label="Kimutatás hónapja"></label>
+      </div>
+      <div class="budget-summary month-summary">
+        <div class="budget-total"><div class="muted">Havi bevétel</div><strong id="monthIncome">0 Ft</strong></div>
+        <div class="budget-total"><div class="muted">Havi kiadás</div><strong id="monthExpense">0 Ft</strong></div>
+        <div class="budget-total balance"><div class="muted">Havi egyenleg</div><strong id="monthBalance">0 Ft</strong></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-panel"><h3 class="section-title">Bevétel és kiadás</h3><div id="comparisonChart" class="bar-chart"></div></div>
+        <div class="chart-panel"><h3 class="section-title">Kiadások kategóriánként</h3><div id="categoryChart" class="bar-chart"></div></div>
+      </div>
+    </div>
+    <form id="budgetForm" class="budget-form">
+      <label class="budget-field">Tétel neve<input id="budgetName" maxlength="100" placeholder="Pl. fizetés, bevásárlás" required></label>
+      <label class="budget-field">Típus<select id="budgetType"><option value="income">Bevétel (+)</option><option value="expense">Kiadás (−)</option></select></label>
+      <label class="budget-field">Összeg (Ft)<input id="budgetAmount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Pl. 250000" required></label>
+      <label class="budget-field">Dátum<input id="budgetDate" type="date" required></label>
+      <label class="budget-field">Kategória<select id="budgetCategory">
+        <option>Fizetés</option><option>Lakhatás</option><option>Élelmiszer</option><option>Közlekedés</option><option>Egészség</option><option>Szórakozás</option><option>Előfizetés</option><option>Vásárlás</option><option>Megtakarítás</option><option>Egyéb</option>
+      </select></label>
+      <button type="submit" class="budget-add">+ Tétel hozzáadása</button>
+    </form>
+    <div class="budget-table-wrap">
+      <table class="budget-table">
+        <thead><tr><th>Dátum / tétel</th><th>Kategória</th><th>Típus</th><th>Összeg</th><th aria-label="Műveletek"></th></tr></thead>
+        <tbody id="budgetRows"></tbody>
+      </table>
+      <p id="budgetEmpty" class="muted small" style="text-align:center;padding:18px 0">Még nincs tétel. Adj hozzá egy bevételt vagy kiadást.</p>
+    </div>
+    <p class="muted small" style="margin-bottom:0">Az adatok ebben a böngészőben, ezen az eszközön mentődnek automatikusan.</p>
+  </section>
+
+  <p class="muted small" style="text-align:center;margin-top:24px">ISO óra · Helyi idő és naptár</p>
+</main>
+<div id="toast" class="toast" role="status"></div>
+<script>
+(() => {
+ const $ = id => document.getElementById(id);
+ const huMonths = ['január','február','március','április','május','június','július','augusztus','szeptember','október','november','december'];
+ const huDays = ['vasárnap','hétfő','kedd','szerda','csütörtök','péntek','szombat'];
+ const nameDays = {
+ '1-1':'Fruzsina','1-2':'Ábel','1-6':'Boldizsár','1-18':'Piroska','1-21':'Ágnes',
+ '2-2':'Karolina','2-14':'Bálint','2-19':'Zsuzsanna','2-24':'Mátyás',
+ '3-8':'Zoltán','3-18':'Sándor','3-19':'József','3-25':'Irén',
+ '4-24':'György','4-25':'Márk','4-29':'Péter',
+ '5-4':'Flórián','5-12':'Pongrác','5-25':'Orbán',
+ '6-8':'Medárd','6-13':'Antal','6-24':'Iván','6-29':'Péter, Pál',
+ '7-2':'Ottó','7-11':'Nóra, Lili','7-20':'Illés','7-26':'Anna',
+ '8-15':'Mária','8-20':'István','8-24':'Bertalan',
+ '9-8':'Mária','9-12':'Mária','9-21':'Máté','9-29':'Mihály',
+ '10-4':'Ferenc','10-6':'Brúnó','10-16':'Gál','10-18':'Lukács','10-20':'Vendel','10-23':'Gyöngyi','10-26':'Dömötör',
+ '11-1':'Marianna','11-11':'Márton','11-19':'Erzsébet','11-25':'Katalin',
+ '12-6':'Miklós','12-13':'Luca','12-24':'Ádám, Éva','12-25':'Eugénia','12-26':'István'
+ };
+ let useUTC = false, selected = new Date(), view = new Date(selected.getFullYear(), selected.getMonth(), 1);
+ let reminders = {};
+ try { reminders = JSON.parse(localStorage.getItem('isoora-reminders') || '{}') || {}; } catch(e) { reminders = {}; }
+ const key = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+ const dayName = d => huDays[d.getDay()];
+ const nameDay = d => nameDays[`${d.getMonth()+1}-${d.getDate()}`] || '—';
+ function isoWeek(date) {
+   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+   d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+   const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+   return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+ }
+ function dateText(d, withYear=true) {
+   return `${huMonths[d.getMonth()]} ${d.getDate()}.` + (withYear ? `, ${d.getFullYear()}.` : '') + ` ${dayName(d)}`;
+ }
+ function showToast(msg) { const t=$('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(showToast.timer); showToast.timer=setTimeout(()=>t.style.display='none',2300); }
+ function updateClock() {
+   const now = new Date();
+   $('clock').textContent = useUTC ? now.toISOString().slice(11,19) : now.toLocaleTimeString('hu-HU',{hour12:false});
+   const date = useUTC ? new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())) : now;
+   $('todayLine').textContent = useUTC ? `${date.getUTCFullYear()}. ${huMonths[date.getUTCMonth()]} ${date.getUTCDate()}., ${['vasárnap','hétfő','kedd','szerda','csütörtök','péntek','szombat'][date.getUTCDay()]}` : `${now.getFullYear()}. ${huMonths[now.getMonth()]} ${now.getDate()}., ${dayName(now)}`;
+   $('zoneLine').textContent = useUTC ? 'Koordinált világidő (UTC+00:00)' : `Helyi idő, ${Intl.DateTimeFormat().resolvedOptions().timeZone || 'helyi időzóna'}`;
+   $('weekStat').textContent = `${isoWeek(now)}. hét (${now.getFullYear()})`;
+   $('nameStat').textContent = nameDay(now);
+   $('zoneInfo').textContent = useUTC ? 'UTC+00:00' : (Intl.DateTimeFormat().resolvedOptions().timeZone || 'Helyi idő');
+   $('tabLocal').classList.toggle('active',!useUTC); $('tabUtc').classList.toggle('active',useUTC);
+ }
+ function renderCalendar() {
+   $('monthTitle').textContent = `${view.getFullYear()}. ${huMonths[view.getMonth()]}`;
+   const first = new Date(view.getFullYear(),view.getMonth(),1);
+   const daysInMonth = new Date(view.getFullYear(),view.getMonth()+1,0).getDate();
+   const offset = (first.getDay()+6)%7;
+   let html = '';
+   // ISO week number shown in a slim column before each calendar row.
+   for(let i=0;i<offset;i++) html += '<div class="day empty" aria-hidden="true"></div>';
+   for(let day=1;day<=daysInMonth;day++) {
+     const d = new Date(view.getFullYear(),view.getMonth(),day);
+     const isToday = key(d)===key(new Date());
+     const isSelected = key(d)===key(selected);
+     html += `<button class="day${isToday?' today':''}${isSelected?' selected':''}" data-day="${day}" aria-label="${dateText(d)}${nameDay(d)!=='—'?', névnap: '+nameDay(d):''}" aria-pressed="${isSelected}">${day}</button>`;
+   }
+   const total = offset+daysInMonth;
+   const trailing = (7-total%7)%7;
+   for(let i=0;i<trailing;i++) html += '<div class="day empty" aria-hidden="true"></div>';
+   $('days').innerHTML = html;
+   $('days').querySelectorAll('button[data-day]').forEach(btn=>btn.addEventListener('click',()=>{
+     selected = new Date(view.getFullYear(),view.getMonth(),Number(btn.dataset.day)); renderCalendar();
+   }));
+   $('detailTitle').textContent = `${huMonths[selected.getMonth()]} ${selected.getDate()}., ${dayName(selected)}`;
+   $('detailName').textContent = `Névnap: ${nameDay(selected)}`;
+   $('selectedWeek').textContent = `${isoWeek(selected)}. hét (${selected.getFullYear()})`;
+   renderReminders();
+ }
+ function renderReminders() {
+   const list = reminders[key(selected)] || [];
+   $('detailNote').textContent = list.length ? `${list.length} emlékeztető erre a napra.` : 'Nincs emlékeztető erre a napra.';
+   $('reminderList').innerHTML = '';
+   list.forEach((text,i)=>{
+     const li=document.createElement('li'), span=document.createElement('span'), button=document.createElement('button');
+     span.textContent=text; button.textContent='Törlés'; button.className='remove small'; button.type='button';
+     button.addEventListener('click',()=>{ reminders[key(selected)].splice(i,1); if(!reminders[key(selected)].length) delete reminders[key(selected)]; saveReminders(); renderCalendar(); });
+     li.append(span,button); $('reminderList').append(li);
+   });
+ }
+ function saveReminders(){ try{localStorage.setItem('isoora-reminders',JSON.stringify(reminders));}catch(e){} }
+ $('prevMonth').addEventListener('click',()=>{view=new Date(view.getFullYear(),view.getMonth()-1,1);renderCalendar()});
+ $('nextMonth').addEventListener('click',()=>{view=new Date(view.getFullYear(),view.getMonth()+1,1);renderCalendar()});
+ $('todayBtn').addEventListener('click',()=>{selected=new Date();view=new Date(selected.getFullYear(),selected.getMonth(),1);renderCalendar()});
+ function setUTC(v){useUTC=v;updateClock();}
+ $('localBtn').addEventListener('click',()=>setUTC(false)); $('tabLocal').addEventListener('click',()=>setUTC(false));
+ $('utcBtn').addEventListener('click',()=>setUTC(true)); $('tabUtc').addEventListener('click',()=>setUTC(true));
+ function toggleTheme(){document.body.classList.toggle('light');}
+ $('themeBtn').addEventListener('click',toggleTheme); $('tabTheme').addEventListener('click',toggleTheme);
+ $('reminderForm').addEventListener('submit',e=>{e.preventDefault();const value=$('reminderInput').value.trim();if(!value)return;const k=key(selected);(reminders[k] ||= []).push(value);saveReminders();$('reminderInput').value='';renderCalendar();showToast('Emlékeztető elmentve');});
+ $('exportBtn').addEventListener('click',()=>{
+   const escapeICS = s => s.replace(/\\/g,'\\\\').replace(/,/g,'\\,').replace(/;/g,'\\;').replace(/\n/g,'\\n');
+   let events='';
+   Object.entries(reminders).forEach(([date,items])=>items.forEach((item,i)=>{
+     const compact=date.replaceAll('-','');
+     events += `BEGIN:VEVENT\r\nUID:${compact}-${i}@isoora.local\r\nDTSTAMP:${new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'')}\r\nDTSTART;VALUE=DATE:${compact}\r\nSUMMARY:${escapeICS(item)}\r\nEND:VEVENT\r\n`;
+   }));
+   const blob=new Blob([`BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//ISO Ora//HU\r\nCALSCALE:GREGORIAN\r\n${events}END:VCALENDAR\r\n`],{type:'text/calendar;charset=utf-8'});
+   const url=URL.createObjectURL(blob), a=document.createElement('a');a.href=url;a.download='iso-ora-emlekeztetok.ics';a.click();URL.revokeObjectURL(url);
+   showToast('Naptárexport elindítva');
+ });
+
+ // Bevétel–kiadás tervező és havi kimutatások
+ const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+ let budgetItems = [];
+ try { budgetItems = JSON.parse(localStorage.getItem('isoora-budget') || '[]'); if(!Array.isArray(budgetItems)) budgetItems=[]; } catch(e) { budgetItems=[]; }
+ // Régebbi mentett tételekhez alapértelmezett dátumot és kategóriát rendelünk.
+ budgetItems = budgetItems.map(x=>({...x,date:x.date||todayISO(),category:x.category||'Egyéb'}));
+ $('budgetDate').value=todayISO();
+ $('budgetMonth').value=todayISO().slice(0,7);
+ const money = value => new Intl.NumberFormat('hu-HU',{style:'currency',currency:'HUF',maximumFractionDigits:2}).format(value);
+ function saveBudget(){ try{localStorage.setItem('isoora-budget',JSON.stringify(budgetItems));}catch(e){} }
+ function renderBars(containerId, items, mode){
+   const container=$(containerId);container.innerHTML='';
+   if(!items.length){container.innerHTML='<div class="chart-empty">Ehhez a hónaphoz még nincs adat.</div>';return;}
+   const max=Math.max(...items.map(x=>x.value),1);
+   items.forEach(item=>{
+     const row=document.createElement('div');row.className='bar-row';
+     const label=document.createElement('span');label.textContent=item.label;label.title=item.label;
+     const track=document.createElement('div');track.className='bar-track';
+     const fill=document.createElement('div');fill.className='bar-fill'+(mode==='expense'?' expense':'');fill.style.width=`${Math.max(0,Math.min(100,item.value/max*100))}%`;track.append(fill);
+     const value=document.createElement('span');value.className='bar-value';value.textContent=money(item.value);
+     row.append(label,track,value);container.append(row);
+   });
+ }
+ function renderAnalytics(){
+   const month=$('budgetMonth').value;
+   const filtered=budgetItems.filter(x=>(x.date||'').slice(0,7)===month);
+   const income=filtered.filter(x=>x.type==='income').reduce((s,x)=>s+(Number(x.amount)||0),0);
+   const expense=filtered.filter(x=>x.type==='expense').reduce((s,x)=>s+(Number(x.amount)||0),0);
+   $('monthIncome').textContent=money(income);$('monthExpense').textContent=money(expense);$('monthBalance').textContent=money(income-expense);
+   $('monthBalance').style.color=income-expense<0?'#f29a91':'var(--accent)';
+   renderBars('comparisonChart',[{label:'Bevétel',value:income},{label:'Kiadás',value:expense}], 'comparison');
+   const categories={};
+   filtered.filter(x=>x.type==='expense').forEach(x=>{categories[x.category||'Egyéb']=(categories[x.category||'Egyéb']||0)+(Number(x.amount)||0);});
+   renderBars('categoryChart',Object.entries(categories).sort((a,b)=>b[1]-a[1]).map(([label,value])=>({label,value})),'expense');
+ }
+ function renderBudget(){
+   const income=budgetItems.filter(x=>x.type==='income').reduce((s,x)=>s+(Number(x.amount)||0),0);
+   const expense=budgetItems.filter(x=>x.type==='expense').reduce((s,x)=>s+(Number(x.amount)||0),0);
+   $('incomeTotal').textContent=money(income);$('expenseTotal').textContent=money(expense);$('balanceTotal').textContent=money(income-expense);
+   $('balanceTotal').style.color=income-expense<0?'#f29a91':'var(--accent)';
+   $('budgetRows').innerHTML='';$('budgetEmpty').style.display=budgetItems.length?'none':'block';
+   budgetItems.forEach((item,index)=>{
+     const tr=document.createElement('tr');
+     const dateNameTd=document.createElement('td'),catTd=document.createElement('td'),typeTd=document.createElement('td'),amountTd=document.createElement('td'),actionsTd=document.createElement('td');
+     const dateInput=document.createElement('input');dateInput.type='date';dateInput.value=item.date||todayISO();dateInput.setAttribute('aria-label','Tétel dátuma');
+     dateInput.addEventListener('change',()=>{budgetItems[index].date=dateInput.value||todayISO();saveBudget();renderBudget();});
+     const nameInput=document.createElement('input');nameInput.value=item.name;nameInput.maxLength=100;nameInput.setAttribute('aria-label','Tétel neve');nameInput.style.marginTop='5px';
+     nameInput.addEventListener('change',()=>{budgetItems[index].name=nameInput.value.trim()||'Névtelen tétel';saveBudget();renderBudget();});
+     dateNameTd.append(dateInput,nameInput);
+     const catSelect=document.createElement('select');catSelect.setAttribute('aria-label','Kategória');
+     ['Fizetés','Lakhatás','Élelmiszer','Közlekedés','Egészség','Szórakozás','Előfizetés','Vásárlás','Megtakarítás','Egyéb'].forEach(label=>{const o=document.createElement('option');o.value=label;o.textContent=label;catSelect.append(o);});
+     if(![...catSelect.options].some(o=>o.value===item.category)){const o=document.createElement('option');o.value=item.category;o.textContent=item.category;catSelect.append(o);}
+     catSelect.value=item.category||'Egyéb';catSelect.addEventListener('change',()=>{budgetItems[index].category=catSelect.value;saveBudget();renderBudget();});catTd.append(catSelect);
+     const typeSelect=document.createElement('select');typeSelect.setAttribute('aria-label','Tétel típusa');
+     [['income','Bevétel (+)'],['expense','Kiadás (−)']].forEach(([v,label])=>{const o=document.createElement('option');o.value=v;o.textContent=label;typeSelect.append(o);});
+     typeSelect.value=item.type;typeSelect.className=item.type==='income'?'budget-type-income':'budget-type-expense';
+     typeSelect.addEventListener('change',()=>{budgetItems[index].type=typeSelect.value;saveBudget();renderBudget();});typeTd.append(typeSelect);
+     const amountInput=document.createElement('input');amountInput.type='number';amountInput.min='0.01';amountInput.step='0.01';amountInput.value=item.amount;amountInput.setAttribute('aria-label','Összeg forintban');
+     amountInput.addEventListener('change',()=>{const n=Number(amountInput.value);if(Number.isFinite(n)&&n>0){budgetItems[index].amount=n;saveBudget();renderBudget();}else{showToast('Az összeg legyen nagyobb nullánál.');renderBudget();}});amountTd.append(amountInput);
+     const remove=document.createElement('button');remove.type='button';remove.textContent='Törlés';remove.className='remove';remove.addEventListener('click',()=>{budgetItems.splice(index,1);saveBudget();renderBudget();});
+     actionsTd.className='budget-actions';actionsTd.append(remove);tr.append(dateNameTd,catTd,typeTd,amountTd,actionsTd);$('budgetRows').append(tr);
+   });
+   renderAnalytics();
+ }
+ $('budgetMonth').addEventListener('change',renderAnalytics);
+ $('budgetForm').addEventListener('submit',e=>{
+   e.preventDefault();const name=$('budgetName').value.trim(),amount=Number($('budgetAmount').value),type=$('budgetType').value,date=$('budgetDate').value||todayISO(),category=$('budgetCategory').value;
+   if(!name||!Number.isFinite(amount)||amount<=0){showToast('Adj meg egy nevet és nullánál nagyobb összeget.');return;}
+   budgetItems.push({name,amount,type,date,category});saveBudget();$('budgetMonth').value=date.slice(0,7);renderBudget();
+   $('budgetName').value='';$('budgetAmount').value='';$('budgetDate').value=todayISO();$('budgetName').focus();
+ });
+ $('budgetExport').addEventListener('click',()=>{
+   const rows=[['Dátum','Tétel','Kategória','Típus','Összeg (Ft)'],...budgetItems.map(x=>[x.date||'',x.name,x.category||'Egyéb',x.type==='income'?'Bevétel':'Kiadás',x.amount])];
+   const csv='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n');
+   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+   a.href=url;a.download='bevetel-kiadas-tervezo.csv';a.click();URL.revokeObjectURL(url);showToast('CSV export elindítva');
+ });
+ saveBudget();renderBudget();
+
+ updateClock(); renderCalendar(); setInterval(updateClock,250);
+})();
+</script>
+</body>
+</html>
